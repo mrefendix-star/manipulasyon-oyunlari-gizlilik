@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-posta doğrulandı — Manipülasyon Oyunları</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{
+    --bg:#101114; --card:#1C1E22; --line:#2E3137; --text:#EEEAE3; --muted:#ABA59B;
+    --faint:#8A857C; --gold:#C2A16A; --bordo:#7A2438;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:0 16px; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  }
+  .wrap{max-width:520px; width:100%; padding:48px 0}
+  .kicker{font:12px/1.4 ui-monospace,Menlo,monospace; letter-spacing:1.6px; color:var(--gold); text-transform:uppercase}
+  h1{font-family:Georgia,"Times New Roman",serif; font-size:28px; line-height:1.25; margin:12px 0 10px}
+  p{color:var(--muted); margin:0 0 14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px 22px}
+  .btn{
+    display:block; text-align:center; background:var(--bordo); color:#fff; text-decoration:none;
+    border-radius:12px; padding:15px 18px; font-weight:600; margin-top:22px;
+  }
+  .hint{color:var(--faint); font-size:14px; margin-top:16px}
+  .mark{font-size:34px; line-height:1}
+  .err h1{color:var(--text)}
+  a{color:var(--gold)}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="ok" hidden>
+    <div class="mark">✓</div>
+    <div class="kicker">Manipülasyon Oyunları</div>
+    <h1>E-posta adresin doğrulandı</h1>
+    <p>Artık uygulamaya giriş yapabilirsin. Bu sayfayı kapatıp uygulamaya dönmen yeterli.</p>
+    <a class="btn" href="manipulasyonoyunlari://">Uygulamayı aç</a>
+    <p class="hint">Düğme bir şey yapmıyorsa telefonundan uygulamayı elle aç ve e-postan ile şifrenle giriş yap.</p>
+  </div>
+
+  <div class="card err" id="hata" hidden>
+    <div class="mark">—</div>
+    <div class="kicker">Manipülasyon Oyunları</div>
+    <h1>Bağlantı çalışmadı</h1>
+    <p id="hata-metin">Doğrulama bağlantısının süresi dolmuş ya da daha önce kullanılmış olabilir.</p>
+    <p>Uygulamayı aç, aynı e-posta ile yeniden kayıt olmayı dene; yeni bir doğrulama bağlantısı gönderilir.</p>
+    <a class="btn" href="manipulasyonoyunlari://">Uygulamayı aç</a>
+    <p class="hint">Sorun sürerse <a href="mailto:mrefendix@gmail.com">mrefendix@gmail.com</a> adresine yazabilirsin.</p>
+  </div>
+
+</div>
+<script>
+  // Supabase, bağlantıyı sunucuda doğrular ve sonucu adres çubuğunun # kısmında döndürür.
+  // Başarıda access_token, başarısızlıkta error gelir. Hiçbir veri burada saklanmaz.
+  (function () {
+    var h = new URLSearchParams(location.hash.slice(1));
+    var q = new URLSearchParams(location.search);
+    var hata = h.get('error_description') || h.get('error') || q.get('error_description') || q.get('error');
+    if (hata) {
+      document.getElementById('hata-metin').textContent = decodeURIComponent(String(hata).replace(/\+/g, ' '));
+      document.getElementById('hata').hidden = false;
+    } else {
+      document.getElementById('ok').hidden = false;
+    }
+    // Adres çubuğunda oturum anahtarı bırakma.
+    if (location.hash) history.replaceState(null, '', location.pathname);
+  })();
+</script>
+</body>
+</html>

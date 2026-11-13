@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yeni şifre belirle — Manipülasyon Oyunları</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{
+    --bg:#101114; --card:#1C1E22; --line:#2E3137; --text:#EEEAE3; --muted:#ABA59B;
+    --faint:#8A857C; --gold:#C2A16A; --bordo:#7A2438; --danger:#D4737F;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:0 16px; min-height:100vh; display:flex; align-items:center; justify-content:center;
+  }
+  .wrap{max-width:520px; width:100%; padding:48px 0}
+  .kicker{font:12px/1.4 ui-monospace,Menlo,monospace; letter-spacing:1.6px; color:var(--gold); text-transform:uppercase}
+  h1{font-family:Georgia,"Times New Roman",serif; font-size:28px; line-height:1.25; margin:12px 0 10px}
+  p{color:var(--muted); margin:0 0 14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px 22px}
+  label{display:block; color:var(--text); font-size:14px; margin:18px 0 6px}
+  input{
+    width:100%; background:#141619; border:1px solid var(--line); border-radius:12px;
+    padding:14px 14px; color:var(--text); font-size:16px;
+  }
+  input:focus{outline:none; border-color:var(--gold)}
+  .btn{
+    width:100%; background:var(--bordo); color:#fff; border:0; border-radius:12px;
+    padding:15px 18px; font-weight:600; font-size:16px; margin-top:22px; cursor:pointer;
+  }
+  .btn[disabled]{opacity:.55; cursor:default}
+  .hint{color:var(--faint); font-size:14px; margin-top:14px}
+  .msg{margin-top:16px; font-size:15px}
+  .msg.err{color:var(--danger)}
+  .msg.ok{color:var(--gold)}
+  .mark{font-size:34px; line-height:1}
+  a{color:var(--gold)}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <form class="card" id="form" hidden autocomplete="off">
+    <div class="kicker">Manipülasyon Oyunları</div>
+    <h1>Yeni şifre belirle</h1>
+    <p>Hesabın için yeni bir şifre yaz. En az 8 karakter olmalı.</p>
+
+    <label for="p1">Yeni şifre</label>
+    <input id="p1" type="password" autocomplete="new-password" minlength="8" required>
+
+    <label for="p2">Yeni şifre (tekrar)</label>
+    <input id="p2" type="password" autocomplete="new-password" minlength="8" required>
+
+    <button class="btn" id="gonder" type="submit">Şifreyi kaydet</button>
+    <div class="msg" id="msg" hidden></div>
+    <p class="hint">Şifren yalnızca sunucuya gönderilir, bu sayfada saklanmaz.</p>
+  </form>
+
+  <div class="card" id="bitti" hidden>
+    <div class="mark">✓</div>
+    <div class="kicker">Manipülasyon Oyunları</div>
+    <h1>Şifren değiştirildi</h1>
+    <p>Uygulamaya dönüp yeni şifrenle giriş yapabilirsin.</p>
+    <a class="btn" style="display:block;text-align:center;text-decoration:none" href="manipulasyonoyunlari://">Uygulamayı aç</a>
+  </div>
+
+  <div class="card" id="hata" hidden>
+    <div class="mark">—</div>
+    <div class="kicker">Manipülasyon Oyunları</div>
+    <h1>Bağlantı çalışmadı</h1>
+    <p id="hata-metin">Şifre sıfırlama bağlantısının süresi dolmuş ya da daha önce kullanılmış olabilir.</p>
+    <p>Uygulamadaki “Şifremi unuttum” adımını tekrarlayıp yeni bir bağlantı isteyebilirsin.</p>
+    <p class="hint">Sorun sürerse <a href="mailto:mrefendix@gmail.com">mrefendix@gmail.com</a> adresine yazabilirsin.</p>
+  </div>
+
+</div>
+<script>
+  (function () {
+    var API = 'https://jlviaznbfmppgpawurob.supabase.co';
+    var KEY = 'sb_publishable_LhQxfWpn-ttmE5LOmy5eBA_LOgAJ5XZ';
+
+    var h = new URLSearchParams(location.hash.slice(1));
+    var q = new URLSearchParams(location.search);
+    var token = h.get('access_token');
+    var hata = h.get('error_description') || h.get('error') || q.get('error_description') || q.get('error');
+
+    var form = document.getElementById('form');
+    var msg = document.getElementById('msg');
+    var gonder = document.getElementById('gonder');
+
+    function goster(el) { el.hidden = false; }
+    function hataGoster(metin) {
+      if (metin) document.getElementById('hata-metin').textContent = metin;
+      goster(document.getElementById('hata'));
+    }
+
+    if (hata) {
+      hataGoster(decodeURIComponent(String(hata).replace(/\+/g, ' ')));
+    } else if (!token) {
+      hataGoster('Bu sayfa yalnızca e-postandaki şifre sıfırlama bağlantısıyla açılabilir.');
+    } else {
+      goster(form);
+    }
+    // Oturum anahtarını adres çubuğunda bırakma.
+    if (location.hash) history.replaceState(null, '', location.pathname);
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var p1 = document.getElementById('p1').value;
+      var p2 = document.getElementById('p2').value;
+      msg.hidden = false;
+      msg.className = 'msg err';
+      if (p1.length < 8) { msg.textContent = 'Şifre en az 8 karakter olmalı.'; return; }
+      if (p1 !== p2) { msg.textContent = 'İki şifre aynı değil.'; return; }
+
+      gonder.disabled = true;
+      msg.className = 'msg';
+      msg.textContent = 'Kaydediliyor…';
+
+      fetch(API + '/auth/v1/user', {
+        method: 'PUT',
+        headers: {
+          'apikey': KEY,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: p1 }),
+      })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
+        .then(function (s) {
+          if (s.ok) {
+            form.hidden = true;
+            goster(document.getElementById('bitti'));
+            return;
+          }
+          gonder.disabled = false;
+          msg.className = 'msg err';
+          msg.textContent = (s.b && (s.b.msg || s.b.message || s.b.error_description))
+            || 'Şifre değiştirilemedi. Bağlantının süresi dolmuş olabilir.';
+        })
+        .catch(function () {
+          gonder.disabled = false;
+          msg.className = 'msg err';
+          msg.textContent = 'Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.';
+        });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -61,6 +61,15 @@
   (function () {
     var h = new URLSearchParams(location.hash.slice(1));
     var q = new URLSearchParams(location.search);
+
+    // Şifre sıfırlama bağlantısı da buraya düşebilir: uygulamanın eski sürümleri
+    // ayrı bir adres vermediği için Supabase her bağlantıyı Site URL'e yollar.
+    // O durumda hash'i olduğu gibi taşıyıp şifre belirleme sayfasına geçiyoruz.
+    if (h.get('type') === 'recovery') {
+      location.replace('sifre.html' + location.hash);
+      return;
+    }
+
     var hata = h.get('error_description') || h.get('error') || q.get('error_description') || q.get('error');
     if (hata) {
       document.getElementById('hata-metin').textContent = decodeURIComponent(String(hata).replace(/\+/g, ' '));
